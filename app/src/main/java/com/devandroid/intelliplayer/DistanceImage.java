@@ -169,5 +169,15 @@ public class DistanceImage extends Activity {
                 return false;
             }
         });
+
+
+        badboys.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent lecteurMediaActivity = new Intent(DistanceImage.this, LecteurMedia.class);
+                startActivity(lecteurMediaActivity);
+            }
+        });
+
     }
 }
