@@ -20,7 +20,11 @@
         </activity>
         <activity android:name=".Mediatheque" />
         <activity android:name=".DistanceImage" />
-        <activity android:name=".LecteurMedia" />
+        <activity
+            android:name=".LecteurMedia"
+            android:configChanges="orientation|screenSize"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            />
     </application>
 
 </manifest>

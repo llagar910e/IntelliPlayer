@@ -17,8 +17,11 @@ public class LecteurMedia extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lecteur_media);
 
+        MediaController mediaController = new MediaController(this);
         VideoView video = (VideoView) findViewById(R.id.videoView);
+
         video.setVideoURI(Uri.parse(Environment.getExternalStorageDirectory().getPath() + "/small.mp4"));
+        video.setMediaController(mediaController);
 
         video.start();
 
