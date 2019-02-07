@@ -171,7 +171,7 @@ public class DistanceImage extends Activity {
         });
 
 
-        badboys.setOnClickListener(new View.OnClickListener() {
+        deadpool.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent lecteurMediaActivity = new Intent(DistanceImage.this, LecteurMedia.class);
