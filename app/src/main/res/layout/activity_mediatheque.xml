@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/mediasContainer">
+    tools:context=".Mediatheque">
+
+
+    <ImageView
+        android:id="@+id/aquaman"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:src="@drawable/aquaman"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/deadpool"
+        android:layout_marginTop="50dp"/>
+
+    <ImageView
+        android:id="@+id/deadpool"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:src="@drawable/deadpool"
+        app:layout_constraintLeft_toRightOf="@id/aquaman"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="50dp"
+        />
+
+    <ImageView
+        android:id="@+id/ironman"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:src="@drawable/ironman"
+        app:layout_constraintTop_toBottomOf="@id/aquaman"
+        app:layout_constraintLeft_toLeftOf="@id/aquaman"
+        android:layout_marginTop="50dp"/>
+
+    <ImageView
+        android:id="@+id/badboys"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:src="@drawable/badboys"
+        app:layout_constraintTop_toBottomOf="@id/deadpool"
+        app:layout_constraintLeft_toLeftOf="@id/deadpool"
+        android:layout_marginTop="50dp"/>
+
+    <LinearLayout
+        android:id="@+id/layoutBoutons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/augmenterTaille"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Reculer" />
+
+        <Button
+            android:id="@+id/diminuerTaille"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Avancer" />
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>

@@ -21,10 +21,11 @@ public class Accueil extends Activity {
         TextView prets = (TextView)findViewById(R.id.prets);
         Button cestParti = (Button)findViewById(R.id.boutonCestParti);
 
+
         cestParti.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent distanceImageActivity = new Intent(Accueil.this, DistanceImage.class);
+                Intent distanceImageActivity = new Intent(Accueil.this, Mediatheque.class);
                 startActivity(distanceImageActivity);
             }
         });
