@@ -7,6 +7,11 @@
     android:id="@+id/mediasContainer">
     tools:context=".Mediatheque">
 
+    <SurfaceView
+        android:id="@+id/cameraView"
+        android:layout_width="1dp"
+        android:layout_height="1dp" />
+
 
     <ImageView
         android:id="@+id/aquaman"
@@ -47,28 +52,22 @@
         app:layout_constraintLeft_toLeftOf="@id/deadpool"
         android:layout_marginTop="50dp"/>
 
-    <LinearLayout
-        android:id="@+id/layoutBoutons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toBottomOf="parent">
+    <ImageView
+        android:id="@+id/lalaland"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:src="@drawable/lalaland"
+        app:layout_constraintTop_toBottomOf="@id/ironman"
+        app:layout_constraintLeft_toLeftOf="@id/ironman"
+        android:layout_marginTop="50dp"/>
 
-        <Button
-            android:id="@+id/augmenterTaille"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Reculer" />
-
-        <Button
-            android:id="@+id/diminuerTaille"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="Avancer" />
-
-    </LinearLayout>
+    <ImageView
+        android:id="@+id/livebynight"
+        android:layout_width="170dp"
+        android:layout_height="170dp"
+        android:src="@drawable/livebynight"
+        app:layout_constraintTop_toBottomOf="@id/badboys"
+        app:layout_constraintLeft_toLeftOf="@id/badboys"
+        android:layout_marginTop="50dp"/>
 
 </android.support.constraint.ConstraintLayout>

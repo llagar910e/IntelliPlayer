@@ -2,5 +2,9 @@
     <string name="app_name">IntelliPlayer</string>
     <string name="bienvenue">Bienvenue sur IntelliPlayer !</string>
     <string name="messageAccueil">Cette application comporte des fonctionnalités originales qui vous permettent d\'intéragir avec son interface par le biais des interactions proxémiques. </string>
+    <string name="explicationsMediatheque">L\'affichage de la médiathèque change en fonction de votre positionnement face à l\'appareil. Pour lancer une video, touchez la vignette correspondante.</string>
+    <string name="explicationsVolume">Le volume du lecteur change en fonction de la distance vous séparant de l\'appareil.</string>
+    <string name="explicationsLecteurSeul">Si vous cessez de regarder l\'appareil ou si vous sortez de son champ de vision, la lecture se met en pause. Si vous revenez, elle reprend.</string>
+    <string name="explicationsLecteurDeux">Si vous êtes deux à regarder une vidéo et qu\'un de vous deux s\'approche de l\'appareil, la vidéo se déportera pour afficher les informations la concernant. Si la personne revient, la video se remet en plein écran.</string>
     <string name="prets">Vous êtes prêts ?</string>
 </resources>
