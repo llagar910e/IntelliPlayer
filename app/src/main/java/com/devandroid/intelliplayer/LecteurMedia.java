@@ -1,6 +1,8 @@
 package com.devandroid.intelliplayer;
 
 import android.app.Activity;
+import android.content.Context;
+import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Environment;
@@ -42,9 +44,11 @@ import com.google.android.gms.vision.face.FaceDetector;
 
 import java.io.IOException;
 
+import Proxemic.Distance;
+import Proxemic.ProxZone;
+
 public class LecteurMedia extends Activity {
 
-    // -------------------------------------DONNEES MEMBRES---------------------------------------------
 
     //La camera utilisée par le face detector
     CameraSource cameraSource;
@@ -58,12 +62,56 @@ public class LecteurMedia extends Activity {
     //Renvoie vrai si la vidéo en cours de lecture est affichée en plein écran
     private boolean m_pleinEcran = true;
 
-    // ----------------------------------------METHODES-------------------------------------------------
+    //Le layout de l'activité
+    ConstraintLayout mediaLayout;
+
+    //Le chemin du fichier sur le stockage de l'appareil
+    String path = Environment.getExternalStorageDirectory().getPath() + "/Deadpool2.mp4";
+
+    //Les métadonnées de la vidéo
+    TextView metadata;
+
+    //La vidéo lue par le lecteur
+    VideoView video;
+
+    //Stocke les visages détéctés par la camera
+    SparseArray<Face> faces;
+
+    //Utilisé pour modifier le volume de l'appareil en fonction de la distance
+    AudioManager audioManager;
+
+    //Thread permettant de gérer l'affichage de la vidéo et des métadonnées
+    Runnable changerAffichage;
+
+    //Permet de définir les zones  proxémiques
+    ProxZone proxzone;
+    String zoneProxemique;
+
+    //Siun utilisateur, la distance séparant l'utilisateur et l'appareil
+    Distance distance;
+
+    //Si deux utilisateurs, les distances séparant les utilisateurs et l'appareil
+    Distance distanceVisageUn;
+    Distance distanceVisageDeux;
+
+    //Le volume de l'appareil
+    int volume = 0;
+
+    //Utilisés pour éviter que la vidéo ne se mette en pause suite à un bref défaut de détection
+    int compteurPauseSeul;
+    int compteurPauseDeux;
+
+    //Utilisé pour éviter que l'appareil ne détecte qu'une personne suite à un défaut de détection
+    boolean deuxPersonnes;
+
+
+    //Renvoie true si la vidéo est en plein écran
     public boolean getPleinEcran() {
 
         return this.m_pleinEcran;
     }
 
+    //Permet d'indiquer si la vidéo est en plein écran
     public void setPleinEcran(boolean pleinEcran) {
 
         this.m_pleinEcran = pleinEcran;
@@ -79,13 +127,30 @@ public class LecteurMedia extends Activity {
         constraintSet.connect(video.getId(), ConstraintSet.TOP, mediaLayout.getId(), ConstraintSet.TOP, 0);
         constraintSet.connect(video.getId(), ConstraintSet.BOTTOM, mediaLayout.getId(), ConstraintSet.BOTTOM, 0);
         constraintSet.setVerticalBias(video.getId(), (float) 0.5);
+        constraintSet.connect(video.getId(), ConstraintSet.LEFT, mediaLayout.getId(), ConstraintSet.LEFT, 0);
+        constraintSet.connect(video.getId(), ConstraintSet.RIGHT, mediaLayout.getId(), ConstraintSet.RIGHT, 0);
         constraintSet.applyTo(mediaLayout);
 
     }
 
-    //Affiche la video en taille reduite
-    public void affichePetiteTaille(VideoView video, String path) {
-        video.setLayoutParams(new ConstraintLayout.LayoutParams(1200, 1200));
+    //Affiche la video en taille reduite en haut à gauche de l'écran et baisse le volume à 50%
+    public void affichePetiteTailleGauche(VideoView video) {
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.constrainHeight(video.getId(), 1200);
+        constraintSet.constrainWidth(video.getId(), 1200);
+        constraintSet.connect(video.getId(), ConstraintSet.TOP, mediaLayout.getId(), ConstraintSet.TOP, 0);
+        constraintSet.connect(video.getId(), ConstraintSet.LEFT, mediaLayout.getId(), ConstraintSet.LEFT, 0);
+        constraintSet.applyTo(mediaLayout);
+    }
+
+    //Affiche la video en taille reduite en haut à droite de l'écran et baisse le volume à 50%
+    public void affichePetiteTailleDroite(VideoView video) {
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.constrainHeight(video.getId(), 1200);
+        constraintSet.constrainWidth(video.getId(), 1200);
+        constraintSet.connect(video.getId(), ConstraintSet.TOP, mediaLayout.getId(), ConstraintSet.TOP, 0);
+        constraintSet.connect(video.getId(), ConstraintSet.RIGHT, mediaLayout.getId(), ConstraintSet.RIGHT, 0);
+        constraintSet.applyTo(mediaLayout);
     }
 
     //Convertit les ms au format hh:mm:ss
@@ -156,11 +221,8 @@ public class LecteurMedia extends Activity {
         }
     }
 
-    //Affiche les metadonnées metadata en haut à droite du layout mediaLayout
-    void afficherMetadata(ConstraintLayout mediaLayout, TextView metadata) {
-
-        metadata.setLayoutParams(new ConstraintLayout.LayoutParams(500, 500));
-
+    //Affiche les metadonnées (metadata) en haut à droite du layout mediaLayout
+    void afficherMetadataDroite(ConstraintLayout mediaLayout, TextView metadata) {
         ConstraintSet constraintSet = new ConstraintSet();
         constraintSet.constrainHeight(metadata.getId(), ConstraintSet.WRAP_CONTENT);
         constraintSet.constrainWidth(metadata.getId(), ConstraintSet.WRAP_CONTENT);
@@ -168,6 +230,18 @@ public class LecteurMedia extends Activity {
         constraintSet.connect(metadata.getId(), ConstraintSet.LEFT, mediaLayout.getId(), ConstraintSet.LEFT, 0);
         constraintSet.connect(metadata.getId(), ConstraintSet.TOP, mediaLayout.getId(), ConstraintSet.TOP, 40);
         constraintSet.setHorizontalBias(metadata.getId(), (float) 0.88);
+        constraintSet.applyTo(mediaLayout);
+    }
+
+    //Affiche les metadonnées (metadata) en haut à gauche du layout mediaLayout
+    void afficherMetadataGauche(ConstraintLayout mediaLayout, TextView metadata) {
+        ConstraintSet constraintSet = new ConstraintSet();
+        constraintSet.constrainHeight(metadata.getId(), ConstraintSet.WRAP_CONTENT);
+        constraintSet.constrainWidth(metadata.getId(), ConstraintSet.WRAP_CONTENT);
+        constraintSet.connect(metadata.getId(), ConstraintSet.RIGHT, mediaLayout.getId(), ConstraintSet.RIGHT, 0);
+        constraintSet.connect(metadata.getId(), ConstraintSet.LEFT, mediaLayout.getId(), ConstraintSet.LEFT, 0);
+        constraintSet.connect(metadata.getId(), ConstraintSet.TOP, mediaLayout.getId(), ConstraintSet.TOP, 40);
+        constraintSet.setHorizontalBias(metadata.getId(), (float) 0.12);
         constraintSet.applyTo(mediaLayout);
     }
 
@@ -188,6 +262,27 @@ public class LecteurMedia extends Activity {
         File file = new File(path);
         String name = file.getName();
         return name;
+    }
+
+    //Change le volume du lecteur en fonction de la zone proxémique
+    void changerVolume(String zoneProxemique) {
+        if (zoneProxemique == "intimiZone") {
+            //Volume à 25%
+            volume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 4;
+        } else if (zoneProxemique == "personalZone") {
+            //Volume à 50%
+            volume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 2;
+        }
+        //Volume à 75%
+        else if (zoneProxemique == "socialZone") {
+            volume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC) / 4 * 3;
+        }
+        //Volume à 100%
+        else if (zoneProxemique == "publicZone") {
+            volume = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        }
+
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0);
     }
 
 
@@ -216,52 +311,91 @@ public class LecteurMedia extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lecteur_media);
 
+        //Initialisation des distances
+        distance = new Distance();
+        distanceVisageUn = new Distance();
+        distanceVisageDeux = new Distance();
+
+        //Définition des zones proxémiques utilisées
+        proxzone = new ProxZone(0.25D, 0.45D, 1.0D, 2.0D);
+        zoneProxemique = new String();
+
+        //Le preview de la camera réduit à 1 pixel nécessaire pour utiliser la détection de visages
         cameraView = (SurfaceView) findViewById(R.id.cameraView);
 
+        metadata = (TextView) findViewById(R.id.metadata);
 
-        Button boutonMetadata = (Button) findViewById(R.id.boutonMetadata);
-        VideoView video = (VideoView) findViewById(R.id.videoView);
-        String path = Environment.getExternalStorageDirectory().getPath() + "/Deadpool2.mkv";
+        mediaLayout = (ConstraintLayout) findViewById(R.id.mediaLayout);
 
-        final TextView metadata = (TextView) findViewById(R.id.metadata);
+        video = (VideoView) findViewById(R.id.videoView);
+
+        audioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+
+        //Recherche les métadonnées de la vidéo
         chercherMetadata(metadata, path);
 
+        //Association d'une barre de contrôle à la vidéo et lancement de la lecture
         MediaController mediaController = new MediaController(this);
         video.setVideoURI(Uri.parse(path));
         video.setMediaController(mediaController);
         affichePleinEcran(video);
+        mediaController.setAnchorView(video);
         video.start();
 
-        boutonMetadata.setOnClickListener(new View.OnClickListener() {
+        changerAffichage = new Runnable() {
             @Override
-            public void onClick(View v) {
+            public void run() {
+                if (faces.size() == 1) {
+                    if (getPleinEcran() == false) {
+                        affichePleinEcran(video);
+                        retirerMetadata(mediaLayout, metadata);
+                        setPleinEcran(true);
+                    }
+                } else if (faces.size() == 2 && getPleinEcran() == true) {
+                    distanceVisageUn.setfaceHeight(faces.valueAt(0).getHeight());
+                    distanceVisageDeux.setfaceHeight(faces.valueAt(1).getHeight());
+                    if (distanceVisageUn.getDistance() < distanceVisageDeux.getDistance()) {
+                        if (distanceVisageUn.getDistance() <= 1) {
+                            changerVolume("personnelle");
+                            if (faces.valueAt(0).getPosition().x < 650) {
+                                affichePetiteTailleGauche(video);
+                                afficherMetadataDroite(mediaLayout, metadata);
+                                setPleinEcran(false);
+                            } else {
+                                affichePetiteTailleDroite(video);
+                                afficherMetadataGauche(mediaLayout, metadata);
+                                setPleinEcran(false);
+                            }
+                        }
+                    } else {
+                        if (distanceVisageDeux.getDistance() <= 1) {
+                            changerVolume("personnelle");
+                            if (faces.valueAt(1).getPosition().x < 650) {
+                                affichePetiteTailleGauche(video);
+                                afficherMetadataDroite(mediaLayout, metadata);
+                                setPleinEcran(false);
+                            } else {
+                                affichePetiteTailleDroite(video);
+                                afficherMetadataGauche(mediaLayout, metadata);
+                                setPleinEcran(false);
+                            }
+                        }
 
-                ConstraintLayout mediaLayout = (ConstraintLayout) findViewById(R.id.mediaLayout);
-                VideoView video = (VideoView) findViewById(R.id.videoView);
-                String path = Environment.getExternalStorageDirectory().getPath() + "/Deadpool2.mkv";
-                TextView metadata = (TextView) findViewById(R.id.metadata);
-
-                if (getPleinEcran() == true) {
-                    affichePetiteTaille(video, path);
-                    afficherMetadata(mediaLayout, metadata);
-                    setPleinEcran(false);
-                } else {
-                    affichePleinEcran(video);
-                    retirerMetadata(mediaLayout, metadata);
-                    setPleinEcran(true);
+                    }
                 }
             }
-        });
+        };
 
 
+        //L'objet permettant de détecter les visages
         FaceDetector detector = new FaceDetector.Builder(this)
                 .setTrackingEnabled(true)
                 .setLandmarkType(FaceDetector.ALL_LANDMARKS)
                 .build();
-
         if (!detector.isOperational()) {
             Log.w("MainActivity", "FaceDetector dependencies not available");
         } else {
+            //Les paramètres de la camera
             cameraSource = new CameraSource.Builder(getApplicationContext(), detector)
                     .setFacing(CameraSource.CAMERA_FACING_FRONT)
                     .setRequestedFps(30.0f)
@@ -269,9 +403,9 @@ public class LecteurMedia extends Activity {
                     .setAutoFocusEnabled(true)
                     .build();
             cameraView.getHolder().addCallback(new SurfaceHolder.Callback() {
+                //A la création du preview de la caméra -> demander l'autorisation d'utiliser  la caméra
                 @Override
                 public void surfaceCreated(SurfaceHolder holder) {
-
                     try {
                         if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                             ActivityCompat.requestPermissions(LecteurMedia.this, new String[]{Manifest.permission.CAMERA}, RequestCameraPermissionId);
@@ -288,32 +422,58 @@ public class LecteurMedia extends Activity {
 
                 }
 
+                //A la destruction du preview de la caméra -> arrêter la caméra
                 @Override
                 public void surfaceDestroyed(SurfaceHolder holder) {
                     cameraSource.stop();
                 }
             });
 
+            //La détection de visages
             detector.setProcessor(new Detector.Processor<Face>() {
                 @Override
                 public void release() {
 
                 }
 
+                //Lorsque le détecteur de visages effectue ses détections
                 @Override
                 public void receiveDetections(Detector.Detections<Face> detections) {
-                    final SparseArray<Face> faces = detections.getDetectedItems();
-                    if (faces.size() != 0) {
-                        Log.i("Detector", "TROUVE " + faces.size());
-                        for (int i = 0; i < faces.size(); i++) {
-                            Face visage = faces.valueAt(i);
-                            Log.i("Detector", Float.toString(visage.getPosition().x) + ";" + Float.toString(visage.getPosition().y));
-                        }
+
+                    faces = detections.getDetectedItems();
+
+                    //Lance le thread permettant de changer l'affichage de la video et des métadonnées
+                    runOnUiThread(changerAffichage);
+                    Log.v("NombreVisages", Integer.toString(compteurPauseSeul));
+
+                    if (faces.size() == 1) {
+                        compteurPauseSeul = 0;
+                        if (compteurPauseDeux < 100) compteurPauseDeux++;
+                        if (compteurPauseDeux == 100) deuxPersonnes = false;
+                        //Lance la lecture si une personne regarde la vidéo
+                        if (video.isPlaying() == false) video.start();
+
+                        //Change le volume en fonction de la distance
+                        distance.setfaceHeight(faces.valueAt(0).getHeight());
+                        Log.v("Distance", Double.toString(distance.getDistance()));
+                        zoneProxemique = proxzone.setDistanceofEntity(distance.getDistance());
+                        changerVolume(zoneProxemique);
+                        Log.v("Faces", "Coordonnées : " + faces.valueAt(0).getPosition());
                     }
-                    else {
-                        Log.i("Detector", "DISPARU");
+
+                    else if (faces.size() == 0) {
+                        //Met en pause la vidéo si  personne ne regarde
+                        if (compteurPauseSeul < 30) compteurPauseSeul++;
+                        if (compteurPauseSeul == 30) video.pause();
+                        if (deuxPersonnes == true) video.pause();
+                    }
+
+                    else if (faces.size() == 2) {
+                        compteurPauseDeux = 0;
+                        deuxPersonnes = true;
                     }
                 }
+
             });
 
         }
